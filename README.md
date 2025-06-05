@@ -1,6 +1,6 @@
 # PHP + MySQL SSL Docker POC
 
-This project demonstrates:
+This project demonstrates a PHP script that securely connects to MySQL over SSL, queries data, prints it, and exits. Ideal for secure testing, local development, or migration to AWS RDS.
 
 - PHP using `mysqli` over a **secure SSL connection**
 - MySQL (in Docker) with `require_secure_transport=ON`
@@ -79,16 +79,17 @@ $mysqli->real_connect(
 );
 ```
 
-3. Update Docker Compose (for RDS Testing)
+3. Update docker-compose.yml for RDS
 
-In docker-compose.yml, use this config for the PHP service:
+Modify the PHP service:
 
 ```yml
 php:
   build: ./php
+  container_name: php
   volumes:
     - ./client-cert:/certs
-  entrypoint: ["php", "/var/www/html/index.php"]
+  entrypoint: ["php", "/var/www/html/index.php"]  # ✅ Skip wait script, connect to RDS
 ```
 You can now run SSL connections to AWS RDS.
 ```bash
@@ -99,7 +100,8 @@ php-test/
 ├── generate-certs.sh
 ├── php/
 │   ├── Dockerfile
-│   └── index.php
+│   ├── index.php
+│   └── wait-for-mysql.sh
 ├── mysql/
 │   ├── Dockerfile
 │   ├── my.cnf
