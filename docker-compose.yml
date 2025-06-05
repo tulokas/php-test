@@ -1,0 +1,20 @@
+services:
+  mysql:
+    build: ./mysql
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: testdb
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+
+  php:
+    build: ./php
+    container_name: php
+    depends_on:
+      - mysql
+    volumes:
+      - ./client-cert:/certs
+    entrypoint: ["/wait-for-mysql.sh"]
