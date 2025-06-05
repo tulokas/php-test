@@ -1,22 +1,42 @@
 <?php
-$mysqli = mysqli_init();
+class MySQLii extends mysqli
+{
+    public function __construct(
+        $host,
+        $user,
+        $password,
+        $database,
+        $port = 3306,
+        $clientKey = '/certs/client-key.pem',
+        $clientCert = '/certs/client-cert.pem',
+        $caCert = '/certs/ca.pem'
+    ) {
+        parent::__construct();
 
-$mysqli->ssl_set(
-    '/certs/client-key.pem',
-    '/certs/client-cert.pem',
-    '/certs/ca.pem',
-    NULL,
-    NULL
-);
+        // Optional: Extra options
+        $this->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
-if (!$mysqli->real_connect('mysql', 'root', 'rootpass', 'testdb', 3306, NULL, MYSQLI_CLIENT_SSL)) {
-    die('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
+        // Set SSL
+        $this->ssl_set($clientKey, $clientCert, $caCert, NULL, NULL);
+
+        if (!$this->real_connect(
+            $host,
+            $user,
+            $password,
+            $database,
+            $port,
+            NULL,
+            MYSQLI_CLIENT_SSL
+        )) {
+            die('Connect Error (' . mysqli_connect_errno() . '): ' . mysqli_connect_error());
+        }
+
+        echo "✅ Successfully connected via SSL\n";
+    }
 }
 
-echo "✅ Connected successfully with SSL!\n";
-
-// Query the users table
-$result = $mysqli->query("SELECT id, name, email FROM users");
+$db = new MySQLii('mysql', 'root', 'rootpass', 'testdb');
+$result = $db->query("SELECT id, name, email FROM users");
 
 echo "👤 Users in database:\n";
 while ($row = $result->fetch_assoc()) {
@@ -24,4 +44,4 @@ while ($row = $result->fetch_assoc()) {
 }
 
 $result->free();
-$mysqli->close();
+$db->close();

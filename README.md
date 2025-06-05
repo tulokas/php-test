@@ -42,7 +42,7 @@ docker-compose up --build
 ```
 Expected output:
 ```bash
-Connected successfully with SSL!
+✅ Successfully connected via SSL
 👤 Users in database:
 - 1: Alice (alice@example.com)
 - 2: Bob (bob@example.com)
@@ -60,23 +60,38 @@ wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem -O client
 Modify php/index.php:
 
 ```php
-$mysqli = mysqli_init();
+class MySQLii extends mysqli
+{
+    public function __construct(
+        $host,
+        $user,
+        $password,
+        $database,
+        $port = 3306,
+        $caCert = '/certs/global-bundle.pem'  // Use Amazon CA here
+    ) {
+        parent::__construct();
 
-$mysqli->ssl_set(
-    NULL, NULL,
-    '/certs/global-bundle.pem',  // Use Amazon's CA
-    NULL, NULL
-);
+        $this->ssl_set(NULL, NULL, $caCert, NULL, NULL);
 
-$mysqli->real_connect(
-    'your-db.xxxxxx.rds.amazonaws.com',
-    'your_username',
-    'your_password',
-    'your_db_name',
-    3306,
-    NULL,
-    MYSQLI_CLIENT_SSL
-);
+        if (!$this->real_connect(
+            $host,
+            $user,
+            $password,
+            $database,
+            $port,
+            NULL,
+            MYSQLI_CLIENT_SSL
+        )) {
+            die('Connect Error (' . mysqli_connect_errno() . '): ' . mysqli_connect_error());
+        }
+
+        echo "✅ Connected to AWS RDS over SSL\n";
+    }
+}
+
+// Usage:
+$db = new MySQLii('your-db.xxxxxx.rds.amazonaws.com', 'your_user', 'your_pass', 'your_db_name');
 ```
 
 3. Update docker-compose.yml for RDS
