@@ -7,8 +7,6 @@ class MySQLii extends mysqli
         $password,
         $database,
         $port = 3306,
-        $clientKey = '/certs/client-key.pem',
-        $clientCert = '/certs/client-cert.pem',
         $caCert = '/certs/ca.pem'
     ) {
         parent::__construct();
@@ -17,7 +15,7 @@ class MySQLii extends mysqli
         $this->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
         // Set SSL
-        $this->ssl_set($clientKey, $clientCert, $caCert, NULL, NULL);
+        $this->ssl_set(NULL, NULL, $caCert, NULL, NULL);
 
         if (!$this->real_connect(
             $host,

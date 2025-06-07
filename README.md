@@ -53,6 +53,36 @@ Expected output:
 - 1: Alice (alice@example.com)
 - 2: Bob (bob@example.com)
 ```
+
+## SSL Certificate Use: Local vs RDS
+
+By default, this project uses mutual SSL authentication (both client and server present certificates). However, if you want to mirror how Amazon RDS handles SSL, you can simplify the client-side setup:
+
+✅ One-Way SSL (RDS-like setup)
+
+To mimic Amazon RDS behavior more closely in your local environment:
+	•	Use only ca.pem on the PHP side
+	•	This verifies the MySQL server’s certificate
+	•	Do not provide client-cert.pem or client-key.pem
+
+```php
+$mysqli = mysqli_init();
+$mysqli->ssl_set(NULL, NULL, '/certs/ca.pem', NULL, NULL);
+$mysqli->real_connect('mysql', 'root', 'rootpass', 'testdb', 3306, NULL, MYSQLI_CLIENT_SSL);
+```
+
+MySQL must still be configured to use:
+
+```ini
+[mysqld]
+ssl-ca=/etc/mysql/certs/ca.pem
+ssl-cert=/etc/mysql/certs/server-cert.pem
+ssl-key=/etc/mysql/certs/server-key.pem
+require_secure_transport=ON
+```
+
+The above avoids requiring client certs while still enforcing secure SSL connections — just like Amazon RDS.
+
 ## Connect to AWS RDS with SSL
 
 To migrate this setup to Amazon RDS:
